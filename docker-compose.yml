@@ -1,0 +1,53 @@
+version: '3'
+
+networks:
+  devopsnetwork:
+    driver: bridge
+
+volumes:
+  jenkins-data:
+  postgres-data:
+
+services:
+  jenkins:
+    build: ./jenkins
+    restart: always
+    ports:
+      - "18080:8080"
+    networks:
+      - devopsnetwork
+    volumes:
+      - ${HOME}:/home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins-data:/var/jenkins_home
+    depends_on:
+      - sonar
+    environment:
+      - SONAR_PORT=9000
+      - SONAR_DB_PORT=5432
+  sonardb:
+    build: ./sonardb
+    networks:
+      - devopsnetwork
+    restart: always
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+  sonar:
+    build: ./sonar
+    restart: always
+    ports:
+      - "19000:9000"
+      - "19092:9092"
+    networks:
+      - devopsnetwork
+    depends_on:
+      - sonardb
+    environment:
+      - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonar
+      - sonar.jdbc.username=sonar
+      - sonar.jdbc.password=sonar
