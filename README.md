@@ -74,8 +74,47 @@ The purpose of this project is to give the developer a *local* CI/CD pipeline to
 
 This CI/CD pipeline is also not visible outside the local development environment.
  
-Therefore, since no push to origin means no WebHook trigger, and since a WebHook couldsn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
+Therefore, since no push to origin means no WebHook trigger, and since a WebHook couldn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
 
-For this, we use SCM Polling:
+### Declare and configure a Jenkins build for your project
 
-### Hook your repository to Jenkins
+From the Jenkins home page, select New Item:
+
+![New Item](images/jenkins-new-item.png)
+
+Create a Pipeline (using your repository name as the Pipeline name):
+
+![Pipeline](images/jenkins-pipeline.png)
+
+Configure Jenkins to use the Jenkinsfile in your repository:
+
+![Repository Jenkinsfile](images/jenkins-configure.png)
+
+Trigger builds from a Git hook:
+
+![Build Triggers](images/jenkins-build-triggers.png)
+
+### Add a hook in your repository to trigger a Jenkins build on commit
+
+Now that Jenkins is ready to build on commit, you need to set up a git hook in your local repository. (Note: This hook will remain specific to your repository and will not be pushed to origin.  This is by design, since hooks are, by their nature, repository-specific.)
+
+Create ```<your local repository>/.git/hooks/post-commit``` as follows"
+
+```
+#!/bin/bash
+curl http://localhost:18080/git/notifyCommit?url=file:///repos/my-pipeline-project
+```
+
+Then, mark it world-executable:
+
+```
+chmod a+x <your local repository>/.git/hooks/post-commit
+```
+
+
+
+
+
+
+
+
