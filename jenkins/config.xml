@@ -14,8 +14,13 @@
     <buildsDir>${ITEM_ROOTDIR}/builds</buildsDir>
     <jdks>
         <jdk>
+            <name>JDK 11</name>
+            <home>/opt/java/jdk/11</home>
+            <properties/>
+        </jdk>
+        <jdk>
             <name>JDK 8</name>
-            <home>/usr/lib/jvm/java-1.8-openjdk</home>
+            <home>/opt/java/jdk/8</home>
             <properties/>
         </jdk>
     </jdks>

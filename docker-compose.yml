@@ -18,6 +18,7 @@ services:
       - devopsnetwork
     volumes:
       - ${HOME}:/home
+      - ${MY_REPOS}:/repos
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins-data:/var/jenkins_home
     depends_on:

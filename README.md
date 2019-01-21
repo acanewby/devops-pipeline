@@ -14,7 +14,7 @@ __However:__ That doesn't mean this environment should be used as a substitute f
 
 This project was inspired by the work of [Marcel Birkner](https://blog.codecentric.de/en/author/marcel-birkner/), who authored a great CI Platform in 2015: [Continuous Integration Platform Using Docker Containers: Jenkins, SonarQube, Nexus, GitLab](https://blog.codecentric.de/en/2015/10/continuous-integration-platform-using-docker-container-jenkins-sonarqube-nexus-gitlab/).
 
-Why didn't I just use his work?  Good question.  Basically, I wanted a slightly more bare-bones approach, without the vast array of plugins and starter jobs he included.  I also decided it would be easier to build from the ground up, taking care of version updates as I went, rather then editing his original work, whcih is now several years old.
+Why didn't I just use his work?  Good question.  Basically, I wanted a slightly more bare-bones approach, without the vast array of plugins and starter jobs he included.  I also decided it would be easier to build from the ground up, taking care of version updates as I went, rather then editing his original work, which is now several years old.
 
 ## Overview
 
@@ -49,6 +49,17 @@ git version 2.19.2
 
 ## Launching the environment
 
+### Map your local repositories into Jenkins' filespace
+
+In order for Jenkins to see your code repository, and detect buildable changes on commit, you need to map it to a known location in Jenkins' filespace.  To do this, declare an environment variable ```MY_REPOS```, which identifies the location of your local repository.
+
+Notice that ```MY_REPOS``` is plural.  It's likely that you will have more than one repository you want to hook tyo a local CI/CD pipeline. The best way to do this is to arrange all your local repository clones under a common root, which you can then identify to ```MY_REPOS```:
+
+```
+MY_REPOS=/Users/acanewby/repos
+export MY_REPOS
+```
+
 ### Configured services and access points
 
 | *Tool* | *Link* | *Credentials* |
@@ -56,3 +67,15 @@ git version 2.19.2
 | Jenkins | http://localhost:18080/ | no login required |
 | SonarQube | http://localhost:19000/ | admin/admin |
 | Nexus | http://localhost:18081/ | admin/admin123 |
+
+## Integrating with your local repository
+
+The purpose of this project is to give the developer a *local* CI/CD pipeline to allow for more immediate feedback as commits are made locally, prior to pushing to origin.
+
+This CI/CD pipeline is also not visible outside the local development environment.
+ 
+Therefore, since no push to origin means no WebHook trigger, and since a WebHook couldsn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
+
+For this, we use SCM Polling:
+
+### Hook your repository to Jenkins
