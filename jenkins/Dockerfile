@@ -7,36 +7,44 @@ USER root
 # Add Docker repo
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories
 
-RUN apk update \
-      && apk add sudo curl docker
+# Update repos and add some important packages
+RUN apk update && apk add sudo curl
 
-RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
-
-# General environment setup
+# General environment
 ENV SCRATCH /scratch
 WORKDIR ${SCRATCH}
 
-# ------- JDKs --------------
+# ------- Alpine JDKs --------------
 
-RUN curl -L -o ./zulu-jdk-11.tar.gz https://cdn.azul.com/zulu/bin/zulu11.2.3-jdk11.0.1-linux_musl_x64.tar.gz
-RUN curl -L -o ./zulu-jdk-8.tar.gz https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_musl_x64.tar.gz
+ENV ZULU8_VER 8.33.0.1
+ENV JDK8_BUILD 8.0.192
+
+ENV ZULU11_VER 11.2.3
+ENV JDK11_BUILD 11.0.1
+
+RUN curl -L -o ./zulu-jdk-11.tar.gz https://cdn.azul.com/zulu/bin/zulu${ZULU11_VER}-jdk${JDK11_BUILD}-linux_musl_x64.tar.gz
+RUN curl -L -o ./zulu-jdk-8.tar.gz https://cdn.azul.com/zulu/bin/zulu${ZULU8_VER}-jdk${JDK8_BUILD}-linux_musl_x64.tar.gz
 
 WORKDIR /opt/java/jdk
 
 RUN tar -xvzf ${SCRATCH}/zulu-jdk-11.tar.gz
-RUN ln -s ./zulu11.2.3-jdk11.0.1-linux_musl_x64 11
+RUN ln -s ./zulu${ZULU11_VER}-jdk${JDK11_BUILD}-linux_musl_x64 11
 RUN rm -f ${SCRATCH}/zulu-jdk-11.tar.gz
 
 RUN tar -xvzf ${SCRATCH}/zulu-jdk-8.tar.gz
-RUN ln -s ./zulu8.33.0.1-jdk8.0.192-linux_musl_x64 8
+RUN ln -s ./zulu${ZULU8_VER}-jdk${JDK8_BUILD}-linux_musl_x64 8
 RUN rm -f ${SCRATCH}/zulu-jdk-8.tar.gz
 
 ENV JAVA_HOME /opt/java/jdk/8
 ENV PATH ${JAVA_HOME}/bin:$PATH
 
-# ------- as jenkins --------------
+# ------- set jenkins user privs --------
 
-# Configure Jenkins
+RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
+RUN adduser jenkins docker
+
+# ------- Configure Jenkins --------------
+
 USER jenkins
 
 # Install plugins
@@ -57,3 +65,14 @@ COPY config.xml /usr/share/jenkins/ref/config.xml
 
 # Configure SonarQube
 COPY hudson.plugins.sonar.SonarGlobalConfiguration.xml /usr/share/jenkins/ref/hudson.plugins.sonar.SonarGlobalConfiguration.xml
+
+# ----------- Launch container post-build-config --------------------
+
+WORKDIR ${SCRATCH}
+
+USER root
+
+COPY configure-container.sh /opt/configure-container-post-build/
+RUN /bin/chmod a+x /opt/configure-container-post-build/configure-container.sh
+
+# CMD ["/opt/configure-container-post-build/configure-container.sh"]
