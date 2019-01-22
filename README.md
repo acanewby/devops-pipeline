@@ -56,17 +56,89 @@ In order for Jenkins to see your code repository, and detect buildable changes o
 Notice that ```MY_REPOS``` is plural.  It's likely that you will have more than one repository you want to hook tyo a local CI/CD pipeline. The best way to do this is to arrange all your local repository clones under a common root, which you can then identify to ```MY_REPOS```:
 
 ```
-MY_REPOS=/Users/acanewby/repos
+MY_REPOS=/Users/<you>/repos
 export MY_REPOS
 ```
 
+### Launch the pipeline
+
+The pipeline is structured using ```docker-compose```.  
+
+To launch it, change to the repository root directory and then start the environment:
+
+```
+$ docker-compose up -d --build
+Creating network "devops-pipeline_devopsnetwork" with driver "bridge"
+Building sonardb
+Step 1/1 : FROM postgres:9.6
+ ---> ed34a2d5eb79
+ .
+ .
+ <snip/>
+ .
+ .
+ Step 32/32 : RUN /bin/chmod a+x ${SCRATCH}/fix-docker-sock.sh
+ ---> Running in c677b483cd9a
+Removing intermediate container c677b483cd9a
+ ---> f04bda75c8c3
+Successfully built f04bda75c8c3
+Successfully tagged devops-pipeline_jenkins:latest
+Creating devops-pipeline_sonardb_1 ... done
+Creating devops-pipeline_sonar_1   ... done
+Creating devops-pipeline_jenkins_1 ... done
+$
+```
+
+### Post-launch fixup
+
+This is a hack but the only alternative is to launch the entire environment as ```root```, which is just asking for trouble.  
+
+The issue is that the ```jenkins``` user inside the Jenkins container needs to be able to communicate with the Docker daemon running in your native environment so that Jenkins can run containers as necessary during its build operations.  (This is not "Docker-in-Docker", which presents its own set of complex problems.  This is "run Docker containers from inside Jenkins alongside the containers launched from your native platform".)
+
+The problem is that, out of the box, the Docker socket bind-mounted into the Jenkins container is not accessible by the ```jenkins``` user.  We need to modify its access permissions, and we have a script to do it, ready and waiting inside the container:
+
+First, get the ID of the running Jenkins container:
+
+```
+$ docker ps | grep devops-pipeline_jenkins | awk '{print $1}'
+<copy this ID>
+```
+
+Then, launch an interactive shell inside the container:
+
+```
+$ docker exec -ti <your copied ID> /bin/bash
+bash-4.4# pwd
+/scratch
+bash-4.4# ls -l
+total 4
+-rwxr-xr-x 1 root root 195 Jan 22 06:19 fix-docker-sock.sh
+```
+
+Now, run the fixup script:
+
+```
+bash-4.4# ls -l /var/run/docker.sock
+srw-rw---- 1 root root 0 Jan 21 21:42 /var/run/docker.sock
+
+bash-4.4# ./fix-docker-sock.sh
+chmod'ing Docker Socket ...
+
+bash-4.4# ls -l /var/run/docker.sock
+srw-rw-rw- 1 root root 0 Jan 21 21:42 /var/run/docker.sock
+```
+
+*Note: You only have to do this the first time you create the container.  The permissions fix will persist across start/stop events.  It's benign though, so no harm if you run it again, just to make sure.*
+
 ### Configured services and access points
 
-| *Tool* | *Link* | *Credentials* |
-| ------------- | ------------- | ------------- |
-| Jenkins | http://localhost:18080/ | no login required |
-| SonarQube | http://localhost:19000/ | admin/admin |
-| Nexus | http://localhost:18081/ | admin/admin123 |
+Once launched, you will find the following access poiunts avcailable from your local browser:
+
+| *Tool*        | *Link*                  | *Credentials*     |
+| ------------- | ----------------------- | ----------------- |
+| Jenkins       | http://localhost:18080/ | no login required |
+| SonarQube     | http://localhost:19000/ | admin/admin       |
+| Nexus         | http://localhost:18081/ | admin/admin123    |
 
 ## Integrating with your local repository
 

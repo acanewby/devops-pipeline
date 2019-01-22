@@ -66,13 +66,12 @@ COPY config.xml /usr/share/jenkins/ref/config.xml
 # Configure SonarQube
 COPY hudson.plugins.sonar.SonarGlobalConfiguration.xml /usr/share/jenkins/ref/hudson.plugins.sonar.SonarGlobalConfiguration.xml
 
-# ----------- Launch container post-build-config --------------------
-
-WORKDIR ${SCRATCH}
+# ----------- Deploy post-build fixup script --------------------
 
 USER root
 
-COPY configure-container.sh /opt/configure-container-post-build/
-RUN /bin/chmod a+x /opt/configure-container-post-build/configure-container.sh
+WORKDIR ${SCRATCH}
 
-# CMD ["/opt/configure-container-post-build/configure-container.sh"]
+COPY fix-docker-sock.sh ${SCRATCH}
+RUN /bin/chmod a+x ${SCRATCH}/fix-docker-sock.sh
+
