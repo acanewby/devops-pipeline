@@ -2,7 +2,7 @@ version: '3'
 
 networks:
   devopsnetwork:
-    driver: bridge
+    external: true
 
 volumes:
   jenkins-data:
