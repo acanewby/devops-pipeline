@@ -49,6 +49,32 @@ git version 2.19.2
 
 ## Launching the environment
 
+### Declare a user-defined network
+
+One feature of Jenkins pipelines is the ability to use Docker containers as *agents* to execute pipeline steps.  This is very cool, because those containers can include whatever software the pipeline step requires, making it unnecessary to configure a big, bloated Jenkins environment.  (It also makes it possible to containerize the Jenkins CI/CD pipeline since we don't have to anticipate what every development project may require.)
+
+However, those containers often need to communicate with the core pipeline services (e.g. SonarQube / Nexus). The easiest way to do this reliably is to have all containers be part of the same Docker network and then use the hostnames declared in the ```docker-compose.yml``` to reach those core services - much easier and more reliable than using network gymnastics to try and discover host IPs or rely on external port mapping to the Docker host.
+
+To achieve this, create a user-defined network *before* launching the Jenkins pipeline environment:
+
+```
+$ docker network create -d bridge devopsnetwork
+<a long network ID will be displayed>
+```
+
+The core pipeline environment expects this network to exist and will report an error if it is not found.  Provided the network exists, the core pipeline services will join this network when they are launched using ```docker-compose``` (see below).
+
+Because this network is declared external to the docker-compose environment, it will *also* be joinable by any containers launched by Jenkins pipelines e.g.:
+
+```
+agent {
+	docker {
+		image 'acanewby/sonar-scanner:3.3.0-alpine'
+		args '--network="devopsnetwork"'
+	}
+}
+```
+
 ### Map your local repositories into Jenkins' filespace
 
 In order for Jenkins to see your code repository, and detect buildable changes on commit, you need to map it to a known location in Jenkins' filespace.  To do this, declare an environment variable ```MY_REPOS```, which identifies the location of your local repository.
