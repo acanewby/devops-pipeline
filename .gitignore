@@ -1,3 +1,4 @@
+# Maven
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -7,3 +8,46 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
+
+
+# Binaries
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.war
+*.ear
+*.sar
+*.class
+
+
+
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Misc IDE
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+
+# OS
+.DS_Store
+Thumbs.db
