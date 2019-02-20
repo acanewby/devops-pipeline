@@ -2,14 +2,14 @@ FROM sonatype/nexus3:3.15.2
 
 # Install required packages
 USER root
-RUN yum install -y openssl curl ca-certificates && \
+RUN yum install -y openssl curl ca-certificates sudo && \
     update-ca-trust force-enable
 
 # Gives nexus sudoer privilege
 RUN echo "nexus ALL=NOPASSWD: ALL" >> /etc/sudoers
 
 # General environment setup
-ARG SCRATCH=/scratch
+ENV SCRATCH=/scratch
 ARG JDK_VER=8
 ARG JDK_ARCHIVE=${SCRATCH}/jdk-${JDK_VER}.tar.gz
 
@@ -26,6 +26,7 @@ ENV JAVA_HOME /opt/java/jdk/$JDK_VER
 ENV PATH ${JAVA_HOME}/bin:$PATH
 
 # Stage Nexus config items
+ARG TRIGGER=9
 COPY configure-and-launch-nexus.sh ${SCRATCH}
 COPY nexus.properties ${SCRATCH}
 RUN chmod a+x ${SCRATCH}/configure-and-launch-nexus.sh
@@ -34,4 +35,4 @@ EXPOSE 8443
 # Back to default user
 USER nexus
 WORKDIR ${SCRATCH}
-CMD ["sh", "-c", "/scratch/configure-and-launch-nexus.sh"]
+ENTRYPOINT ${SCRATCH}/configure-and-launch-nexus.sh

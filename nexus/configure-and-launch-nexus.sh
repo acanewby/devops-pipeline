@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # The following env vars should be defined by the source image
 echo "===================================================="
@@ -8,6 +8,8 @@ echo "SONATYPE_DIR : ${SONATYPE_DIR}"
 echo "SONATYPE_WORK: ${SONATYPE_WORK}"
 echo "NEXUS_HOME   : ${NEXUS_HOME}"
 echo "NEXUS_DATA   : ${NEXUS_DATA}"
+echo "----------------------------------------------------"
+echo "PATH         : ${PATH}"
 echo "===================================================="
 
 while [ ! -d ${NEXUS_DATA}/log ]; do
@@ -20,7 +22,7 @@ NEXUS_HOST=nexus
 NEXUS_PORT=8443
 JKS_PW=password
 
-echo "Making our keystore in NEXUS_DATA/etc/ssl ..."
+echo "Making keystore in ${NEXUS_DATA}/etc/ssl ..."
 mkdir -p ${NEXUS_DATA}/etc/ssl
 
 keytool -genkeypair \
@@ -29,10 +31,12 @@ keytool -genkeypair \
     -dname "CN=${NEXUS_HOST}, OU=acanewby, O=Sonatype, L=Unspecified, ST=Unspecified, C=US" \
     -ext "BC=ca:true"
 
-keytool -list -keystore ${NEXUS_DATA}/etc/ssl/keystore.jks -storepass ${JKS_PW}
-
 # Trust the certificate
-keytool -printcert -rfc -sslserver ${NEXUS_HOST}:${NEXUS_PORT} > /etc/pki/ca-trust/source/anchors/${NEXUS_HOST}.crt
+echo "Trust the certificate ..."
+sudo keytool -exportcert -v \
+    -keystore ${NEXUS_DATA}/etc/ssl/keystore.jks -storepass ${JKS_PW} \
+    -rfc -alias jetty \
+    -file /etc/pki/ca-trust/source/anchors/${NEXUS_HOST}.crt
 sudo update-ca-trust
 
 echo "Configuring Sonatype Nexus ..."
