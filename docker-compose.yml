@@ -7,6 +7,7 @@ networks:
 volumes:
   jenkins-data:
   postgres-data:
+  nexus-data:
 
 services:
   jenkins:
@@ -17,7 +18,6 @@ services:
     networks:
       - devopsnetwork
     volumes:
-      # - ${HOME}:/home
       - ${MY_REPOS}:/repos
       - /var/run/docker.sock:/var/run/docker.sock
       - jenkins-data:/var/jenkins_home
@@ -52,3 +52,13 @@ services:
       - sonar.jdbc.url=jdbc:postgresql://sonardb:5432/sonar
       - sonar.jdbc.username=sonar
       - sonar.jdbc.password=sonar
+  nexus:
+    build: ./nexus
+    restart: always
+    ports:
+      - "18081:8081"
+      - "18443:8443"
+    volumes:
+      - nexus-data:/nexus-data
+    networks:
+      - devopsnetwork

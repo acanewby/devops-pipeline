@@ -54,8 +54,15 @@ RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/plugins.txt
 # Set basic configuration (mainly, disable security)
 COPY config.xml /usr/share/jenkins/ref/config.xml
 
-# Credentials (for Nexus user)
+# Configure Nexus
+#
+# Get this stuff out ?
+#
 # COPY credentials.xml /usr/share/jenkins/ref/credentials.xml
+# COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkins/ref/org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml
+
+# Took this from plugins.txt ...
+# nexus-jenkins-plugin:3.4.20190116-104331.e820fec
 
 # Configure Docker
 # COPY org.jenkinsci.plugins.docker.commons.tools.DockerTool.xml /usr/share/jenkins/ref/org.jenkinsci.plugins.docker.commons.tools.DockerTool.xml
