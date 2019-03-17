@@ -6,7 +6,7 @@
             <internalId>683634c2-67c2-46e0-9795-c20dba0417ae</internalId>
             <displayName>myNexus</displayName>
             <serverUrl>http://nexus:8081</serverUrl>
-            <credentialsId>4ebdebe8-4fc1-449e-b59f-9f722052f299</credentialsId>
+            <credentialsId>nexus-admin</credentialsId>
         </org.sonatype.nexus.ci.config.Nxrm3Configuration>
     </nxrmConfigs>
     <iqConfigs/>

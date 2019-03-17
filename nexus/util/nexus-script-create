@@ -1,0 +1,31 @@
+#!/bin/bash
+
+usage () {
+    echo "Usage: $0 -u <username> -p <password> -f <JSON file>"
+    exit 1
+}
+
+while getopts ":u:p:f:" opt; do
+  case $opt in
+    u) USR=$OPTARG;;
+    p) PW=$OPTARG;;
+    f) jsonFile=$OPTARG;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      usage
+      ;;
+  esac
+done
+
+if [ -z "$USR" ]; then usage; fi
+if [ -z "$PW" ]; then usage; fi
+if [ -z "$jsonFile" ]; then usage; fi
+
+
+printf "Creating Integration API Script from $jsonFile\n\n"
+
+curl -v -u $USR:$PW --header "Content-Type: application/json" 'http://localhost:8081/service/rest/v1/script/' -d @$jsonFile
