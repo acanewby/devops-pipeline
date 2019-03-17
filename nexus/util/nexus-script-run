@@ -1,0 +1,30 @@
+#!/bin/bash
+
+usage () {
+    echo "Usage: $0 -u <username> -p <password> -s <script name>"
+    exit 1
+}
+
+while getopts ":u:p:s:" opt; do
+  case $opt in
+    u) USR=$OPTARG;;
+    p) PW=$OPTARG;;
+    s) name=$OPTARG;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      usage
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      usage
+      ;;
+  esac
+done
+
+if [ -z "$USR" ]; then usage; fi
+if [ -z "$PW" ]; then usage; fi
+if [ -z "$name" ]; then usage; fi
+
+printf "Running Integration API Script $name\n\n"
+
+curl -v -X POST -u $USR:$PW --header "Content-Type: text/plain" "http://localhost:8081/service/rest/v1/script/$name/run"

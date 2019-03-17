@@ -111,6 +111,7 @@ Successfully built f04bda75c8c3
 Successfully tagged devops-pipeline_jenkins:latest
 Creating devops-pipeline_sonardb_1 ... done
 Creating devops-pipeline_sonar_1   ... done
+Creating devops-pipeline_nexus_1   ... done
 Creating devops-pipeline_jenkins_1 ... done
 $
 ```
@@ -121,7 +122,9 @@ This is a hack but the only alternative is to launch the entire environment as `
 
 The issue is that the ```jenkins``` user inside the Jenkins container needs to be able to communicate with the Docker daemon running in your native environment so that Jenkins can run containers as necessary during its build operations.  (This is not "Docker-in-Docker", which presents its own set of complex problems.  This is "run Docker containers from inside Jenkins alongside the containers launched from your native platform".)
 
-The problem is that, out of the box, the Docker socket bind-mounted into the Jenkins container is not accessible by the ```jenkins``` user.  We need to modify its access permissions, and we have a script to do it, ready and waiting inside the container:
+The problem is that, out of the box, the Docker socket bind-mounted into the Jenkins container is not accessible by the ```jenkins``` user.  It is also not available until after the container is launched, since all volume mount operations only take place *after* the container is built and launched, which means we can't make the changes we need as part of the normal Docker build process.
+
+We, therefore, need to modify its access permissions once the container is up and running, and we have a script to do this, ready and waiting inside the container:
 
 First, get the ID of the running Jenkins container:
 
@@ -165,6 +168,9 @@ Once launched, you will find the following access poiunts avcailable from your l
 | Jenkins       | http://localhost:18080/ | no login required |
 | SonarQube     | http://localhost:19000/ | admin/admin       |
 | Nexus         | http://localhost:18081/ | admin/admin123    |
+| Nexus (HTTPS*)        | https://localhost:18443/ | admin/admin123    |
+
+*\* Uses a self-signed certificate, which you will have to trust in your browser if you want to avoid the annoying "insecure certificate" messages*
 
 ## Integrating with your local repository
 
