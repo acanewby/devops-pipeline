@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# The following env vars should be defined by the source image
+echo "===================================================="
+echo "Nexus environment"
+echo "----------------------------------------------------"
+echo "SONATYPE_DIR : ${SONATYPE_DIR}"
+echo "SONATYPE_WORK: ${SONATYPE_WORK}"
+echo "NEXUS_HOME   : ${NEXUS_HOME}"
+echo "NEXUS_DATA   : ${NEXUS_DATA}"
+echo "----------------------------------------------------"
+echo "PATH         : ${PATH}"
+echo "===================================================="
+
+# Zero out log file
+cat /dev/null > $STARTUP_LOG
+
+while [ ! -d ${NEXUS_DATA}/log ]; do
+    echo "Waiting for Nexus data volume mount ..." >> $STARTUP_LOG
+    sleep 2
+done
+
+# Generate SSL keystore
+NEXUS_HOST=nexus
+JKS_PW=password
+
+echo "Making keystore in ${NEXUS_DATA}/etc/ssl ..." >> $STARTUP_LOG
+mkdir -p ${NEXUS_DATA}/etc/ssl
+
+keytool -genkeypair \
+    -keystore ${NEXUS_DATA}/etc/ssl/keystore.jks -storepass ${JKS_PW} \
+    -keypass ${JKS_PW} -alias jetty -keyalg RSA -keysize 4096 -validity 3650 \
+    -dname "CN=${NEXUS_HOST}, OU=acanewby, O=Sonatype, L=Unspecified, ST=Unspecified, C=US" \
+    -ext "BC=ca:true"
+
+# Trust the certificate
+echo "Trust the certificate ..." >> $STARTUP_LOG
+sudo keytool -exportcert -v \
+    -keystore ${NEXUS_DATA}/etc/ssl/keystore.jks -storepass ${JKS_PW} \
+    -rfc -alias jetty \
+    -file /etc/pki/ca-trust/source/anchors/${NEXUS_HOST}.crt
+sudo update-ca-trust
+
+echo "Configuring Sonatype Nexus ..." >> $STARTUP_LOG
+cp /scratch/nexus.properties ${NEXUS_DATA}/etc
+
+echo "Launching Sonatype Nexus ..." >> $STARTUP_LOG
+nohup ${SONATYPE_DIR}/start-nexus-repository-manager.sh &
+
+# Wait for Nexus to come up ...
+NEXUS_UP=200
+NEXUS_STATE=999
+NEXUS_DELAY=5
+# Yes, We are deliberately waiting at least NEXUS_DELAY seconds to give the server time to get its act together
+echo "======================================" >> $STARTUP_LOG
+echo "Waiting for Nexus to come up ..."       >> $STARTUP_LOG
+echo "--------------------------------------" >> $STARTUP_LOG
+while [ "$NEXUS_STATE" -ne "$NEXUS_UP" ]; do
+    echo "Nexus is not up yet ... :(" >> $STARTUP_LOG
+    sleep $NEXUS_DELAY
+    NEXUS_STATE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$NEXUS_PORT)
+done
+echo "--------------------------------------" >> $STARTUP_LOG
+echo "Nexus is up ... :)"                     >> $STARTUP_LOG
+echo "======================================" >> $STARTUP_LOG
+
+# List the repositories/scripts before
+echo "--------------------------------------" >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/repositories' >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/script' >> $STARTUP_LOG
+echo "--------------------------------------" >> $STARTUP_LOG
+
+# Create some repos
+nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s cr8-docker-repo-group -f ./cr8-docker-repo-group.json >> $STARTUP_LOG
+nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s cr8-npm-repo-group -f ./cr8-npm-repo-group.json >> $STARTUP_LOG
+nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-docker-repo-group >> $STARTUP_LOG
+nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-npm-repo-group >> $STARTUP_LOG
+
+# List the repositories after
+echo "--------------------------------------" >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/repositories' >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/script' >> $STARTUP_LOG
+echo "--------------------------------------" >> $STARTUP_LOG
+
+# Since we nohup'd the main Nexus process, we need to keep the container alive using this script
+tail -f /dev/null

@@ -58,6 +58,8 @@ services:
     ports:
       - "18081:8081"
       - "18443:8443"
+      - "18500:8500"
+      - "18501:8501"
     volumes:
       - nexus-data:/nexus-data
     networks:

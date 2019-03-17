@@ -1,0 +1,5 @@
+{
+  "name": "cr8-docker-repo-group",
+  "type": "groovy",
+  "content": "repository.getRepositoryManager().delete('docker-internal');repository.getRepositoryManager().delete('docker-hub');repository.getRepositoryManager().delete('docker-all');repository.createDockerHosted('docker-internal',null,8501); repository.createDockerProxy('docker-hub','https://registry-1.docker.io','HUB',null,null,null,'default',true,true); repository.createDockerGroup('docker-all', null, 8500, ['docker-hub', 'docker-internal'], true)"
+}
