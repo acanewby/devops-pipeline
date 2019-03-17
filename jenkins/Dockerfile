@@ -54,31 +54,19 @@ RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/plugins.txt
 # Set basic configuration (mainly, disable security)
 COPY config.xml /usr/share/jenkins/ref/config.xml
 
+ARG TRIGGER=5
+
 # Configure Nexus
-#
-# Get this stuff out ?
-#
-# COPY credentials.xml /usr/share/jenkins/ref/credentials.xml
-# COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkins/ref/org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml
-
-# Took this from plugins.txt ...
-# nexus-jenkins-plugin:3.4.20190116-104331.e820fec
-
-# Configure Docker
-# COPY org.jenkinsci.plugins.docker.commons.tools.DockerTool.xml /usr/share/jenkins/ref/org.jenkinsci.plugins.docker.commons.tools.DockerTool.xml
-
-# Configure Maven
-# COPY hudson.tasks.Maven.xml /usr/share/jenkins/ref/hudson.tasks.Maven.xml
+COPY credentials.xml /usr/share/jenkins/ref/credentials.xml
+COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkins/ref/org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml
 
 # Configure SonarQube
 COPY hudson.plugins.sonar.SonarGlobalConfiguration.xml /usr/share/jenkins/ref/hudson.plugins.sonar.SonarGlobalConfiguration.xml
 
-# ----------- Deploy post-build fixup script --------------------
-
+# ----------- Configure and launch Jenkins --------------------
 USER root
-
 WORKDIR ${SCRATCH}
-
-COPY fix-docker-sock.sh ${SCRATCH}
-RUN /bin/chmod a+x ${SCRATCH}/fix-docker-sock.sh
+COPY configure-and-launch-jenkins ${SCRATCH}/
+RUN /bin/chmod a+x ${SCRATCH}/configure-and-launch-jenkins
+ENTRYPOINT ${SCRATCH}/configure-and-launch-jenkins
 

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Let jenkins user read/write Docker socket
+echo "==== chmod'ing Docker Socket =========================="
+/bin/chmod a+rw /var/run/docker.sock
+
+echo "==== Starting Jenkins as $(whoami) - $(id) ========="
+exec /usr/local/bin/jenkins.sh;
+
