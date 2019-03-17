@@ -116,52 +116,9 @@ Creating devops-pipeline_jenkins_1 ... done
 $
 ```
 
-### Post-launch fixup
-
-This is a hack but the only alternative is to launch the entire environment as ```root```, which is just asking for trouble.  
-
-The issue is that the ```jenkins``` user inside the Jenkins container needs to be able to communicate with the Docker daemon running in your native environment so that Jenkins can run containers as necessary during its build operations.  (This is not "Docker-in-Docker", which presents its own set of complex problems.  This is "run Docker containers from inside Jenkins alongside the containers launched from your native platform".)
-
-The problem is that, out of the box, the Docker socket bind-mounted into the Jenkins container is not accessible by the ```jenkins``` user.  It is also not available until after the container is launched, since all volume mount operations only take place *after* the container is built and launched, which means we can't make the changes we need as part of the normal Docker build process.
-
-We, therefore, need to modify its access permissions once the container is up and running, and we have a script to do this, ready and waiting inside the container:
-
-First, get the ID of the running Jenkins container:
-
-```
-$ docker ps | grep devops-pipeline_jenkins | awk '{print $1}'
-<copy this ID>
-```
-
-Then, launch an interactive shell inside the container:
-
-```
-$ docker exec -ti <your copied ID> /bin/bash
-bash-4.4# pwd
-/scratch
-bash-4.4# ls -l
-total 4
--rwxr-xr-x 1 root root 195 Jan 22 06:19 fix-docker-sock.sh
-```
-
-Now, run the fixup script:
-
-```
-bash-4.4# ls -l /var/run/docker.sock
-srw-rw---- 1 root root 0 Jan 21 21:42 /var/run/docker.sock
-
-bash-4.4# ./fix-docker-sock.sh
-chmod'ing Docker Socket ...
-
-bash-4.4# ls -l /var/run/docker.sock
-srw-rw-rw- 1 root root 0 Jan 21 21:42 /var/run/docker.sock
-```
-
-*Note: You only have to do this the first time you create the container.  The permissions fix will persist across start/stop events.  It's benign though, so no harm if you run it again, just to make sure.*
-
 ### Configured services and access points
 
-Once launched, you will find the following access poiunts avcailable from your local browser:
+Once launched, you will find the following access points available from your local browser:
 
 | *Tool*        | *Link*                  | *Credentials*     |
 | ------------- | ----------------------- | ----------------- |
@@ -171,6 +128,20 @@ Once launched, you will find the following access poiunts avcailable from your l
 | Nexus (HTTPS*)        | https://localhost:18443/ | admin/admin123    |
 
 *\* Uses a self-signed certificate, which you will have to trust in your browser if you want to avoid the annoying "insecure certificate" messages*
+
+### Telling Docker to trust the local Nexus Docker repository
+
+Nexus is automatically configured with a Docker repository, which is used to host the Docker images built in Jenkins pipelines.
+
+As required by the Docker CLI, this repository listens on SSL. The connector listens on port 8501 (which is mapped to 18501 on the Docker host).
+
+This SSL connection is secured with a self-signed certificate, which will cause an error when using the Docker CLI.
+
+There are various methods available to get Docker to tolerate a self-signed certificate.  See [here](https://docs.docker.com/registry/insecure/#use-self-signed-certificates) for more details if you want to try this on your own.
+
+My recommendation is to simply declare the repository as insecure in Docker's daemon configuration file, ```daemon.json```.  Instructions for various platforms can be found [here](https://docs.docker.com/engine/reference/commandline/dockerd/#daemon-configuration-file). However, it's pretty easy on Mac:
+
+![Mac Insecure Docker Repository](images/docker-insecure.png)
 
 ## Integrating with your local repository
 
