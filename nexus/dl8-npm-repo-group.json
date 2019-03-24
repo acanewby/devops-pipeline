@@ -1,0 +1,5 @@
+{
+  "name": "dl8-npm-repo-group",
+  "type": "groovy",
+  "content": "repository.getRepositoryManager().delete('npm-internal');repository.getRepositoryManager().delete('npmjs-org');repository.getRepositoryManager().delete('npm-all');"
+}

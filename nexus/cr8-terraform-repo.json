@@ -1,0 +1,5 @@
+{
+  "name": "cr8-terraform-repo",
+  "type": "groovy",
+  "content": "repository.createRawHosted('terraform');"
+}

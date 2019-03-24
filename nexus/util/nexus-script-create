@@ -28,4 +28,4 @@ if [ -z "$jsonFile" ]; then usage; fi
 
 printf "Creating Integration API Script from $jsonFile\n\n"
 
-curl -v -u $USR:$PW --header "Content-Type: application/json" 'http://localhost:8081/service/rest/v1/script/' -d @$jsonFile
+curl -v -u $USR:$PW --header "Content-Type: application/json" "http://localhost:$NEXUS_PORT/service/rest/v1/script/" -d @$jsonFile

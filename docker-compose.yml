@@ -8,6 +8,7 @@ volumes:
   jenkins-data:
   postgres-data:
   nexus-data:
+  shared-data:
 
 services:
   jenkins:
@@ -31,8 +32,6 @@ services:
     networks:
       - devopsnetwork
     restart: always
-    ports:
-      - "15432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     environment:
@@ -56,11 +55,12 @@ services:
     build: ./nexus
     restart: always
     ports:
-      - "18081:8081"
-      - "18443:8443"
-      - "18500:8500"
-      - "18501:8501"
+      - "8400:8400"
+      - "8401:8401"
+      - "8500:8500"
+      - "8501:8501"
     volumes:
       - nexus-data:/nexus-data
+      - shared-data:/shared-data
     networks:
       - devopsnetwork
