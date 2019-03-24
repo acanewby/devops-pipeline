@@ -41,6 +41,9 @@ sudo keytool -exportcert -v \
     -file /etc/pki/ca-trust/source/anchors/${NEXUS_HOST}.crt
 sudo update-ca-trust
 
+# Park it for other hosts who need to trust it
+sudo cp /etc/pki/ca-trust/source/anchors/${NEXUS_HOST}.crt /shared-data/${NEXUS_HOST}.crt
+
 echo "Configuring Sonatype Nexus ..." >> $STARTUP_LOG
 cp /scratch/nexus.properties ${NEXUS_DATA}/etc
 
@@ -66,20 +69,27 @@ echo "======================================" >> $STARTUP_LOG
 
 # List the repositories/scripts before
 echo "--------------------------------------" >> $STARTUP_LOG
-curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/repositories' >> $STARTUP_LOG
-curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/script' >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v1/repositories" >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v1/script" >> $STARTUP_LOG
 echo "--------------------------------------" >> $STARTUP_LOG
 
 # Create some repos
-nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s cr8-docker-repo-group -f ./cr8-docker-repo-group.json >> $STARTUP_LOG
-nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s cr8-npm-repo-group -f ./cr8-npm-repo-group.json >> $STARTUP_LOG
-nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-docker-repo-group >> $STARTUP_LOG
-nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-npm-repo-group >> $STARTUP_LOG
+for SCRIPT in dl8-terraform-repo cr8-terraform-repo \
+    dl8-npm-repo-group cr8-npm-repo-group \
+    dl8-docker-repo-group cr8-docker-repo-group
+do
+    # If the script is not already present, put it there
+    nexus-script-create -u $NEXUS_USR -p $NEXUS_PW -f ./$SCRIPT.json >> $STARTUP_LOG
+    # If the script already exists, update it in case we have a new version
+    nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s $SCRIPT -f ./$SCRIPT.json >> $STARTUP_LOG
+    # Run the script
+    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s $SCRIPT >> $STARTUP_LOG
+done
 
 # List the repositories after
 echo "--------------------------------------" >> $STARTUP_LOG
-curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/repositories' >> $STARTUP_LOG
-curl -u $NEXUS_USR:$NEXUS_PW -X GET 'http://localhost:8081/service/rest/v1/script' >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v1/repositories" >> $STARTUP_LOG
+curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v1/script" >> $STARTUP_LOG
 echo "--------------------------------------" >> $STARTUP_LOG
 
 # Since we nohup'd the main Nexus process, we need to keep the container alive using this script

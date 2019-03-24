@@ -25,4 +25,4 @@ if [ -z "$PW" ]; then usage; fi
 
 printf "Listing Integration API Scripts\n"
 
-curl -v -u $USR:$PW 'http://localhost:8081/service/rest/v1/script'
+curl -v -u $USR:$PW "http://localhost:$NEXUS_PORT/service/rest/v1/script"

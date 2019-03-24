@@ -1,0 +1,5 @@
+{
+  "name": "dl8-terraform-repo",
+  "type": "groovy",
+  "content": "repository.getRepositoryManager().delete('terraform');"
+}
