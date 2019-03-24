@@ -27,4 +27,4 @@ if [ -z "$name" ]; then usage; fi
 
 printf "Deleting Integration API Script $name\n\n"
 
-curl -v -X DELETE -u $USR:$PW  "http://localhost:8081/service/rest/v1/script/$name"
+curl -v -X DELETE -u $USR:$PW  "http://localhost:$NEXUS_PORT/service/rest/v1/script/$name"

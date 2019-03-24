@@ -27,4 +27,4 @@ if [ -z "$name" ]; then usage; fi
 
 printf "Running Integration API Script $name\n\n"
 
-curl -v -X POST -u $USR:$PW --header "Content-Type: text/plain" "http://localhost:8081/service/rest/v1/script/$name/run"
+curl -v -X POST -u $USR:$PW --header "Content-Type: text/plain" "http://localhost:$NEXUS_PORT/service/rest/v1/script/$name/run"

@@ -4,6 +4,10 @@
 echo "==== chmod'ing Docker Socket =========================="
 /bin/chmod a+rw /var/run/docker.sock
 
+# Trust the Sonar CA
+# If you want a good laugh, read this:  https://github.com/kubernetes/kubernetes/issues/43924#issuecomment-296578318
+
+
 echo "==== Starting Jenkins as $(whoami) - $(id) ========="
 exec /usr/local/bin/jenkins.sh;
 

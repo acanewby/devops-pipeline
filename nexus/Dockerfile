@@ -25,7 +25,7 @@ RUN mkdir -p ${SCRATCH} && \
 ENV JAVA_HOME /opt/java/jdk/$JDK_VER
 ENV PATH ${JAVA_HOME}/bin:$PATH
 
-ARG TRIGGER=6
+ARG TRIGGER=10
 
 # Install some utilities
 ENV NEXUS_UTIL /opt/nexus-util
@@ -39,7 +39,7 @@ COPY configure-and-launch-nexus ${SCRATCH}
 COPY nexus.properties ${SCRATCH}
 COPY *.json ${SCRATCH}/
 RUN chmod a+x ${SCRATCH}/configure-and-launch-nexus
-EXPOSE 8443 8500 8501
+EXPOSE 8400 8401 8500 8501
 
 # Set up a log file
 ENV STARTUP_LOG ${SCRATCH}/startup.log
@@ -50,7 +50,9 @@ USER nexus
 WORKDIR ${SCRATCH}
 ENV NEXUS_USR admin
 ENV NEXUS_PW admin123
-ENV NEXUS_PORT 8081
+ENV NEXUS_PORT 8400
+
+ARG TRIGGER=1
 ENTRYPOINT ${SCRATCH}/configure-and-launch-nexus
 
 

@@ -1,0 +1,5 @@
+{
+  "name": "dl8-docker-repo-group",
+  "type": "groovy",
+  "content": "repository.getRepositoryManager().delete('docker-internal');repository.getRepositoryManager().delete('docker-hub');repository.getRepositoryManager().delete('docker-all');"
+}

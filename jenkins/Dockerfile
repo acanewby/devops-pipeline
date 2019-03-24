@@ -54,8 +54,6 @@ RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/plugins.txt
 # Set basic configuration (mainly, disable security)
 COPY config.xml /usr/share/jenkins/ref/config.xml
 
-ARG TRIGGER=5
-
 # Configure Nexus
 COPY credentials.xml /usr/share/jenkins/ref/credentials.xml
 COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkins/ref/org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml
@@ -64,6 +62,7 @@ COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkin
 COPY hudson.plugins.sonar.SonarGlobalConfiguration.xml /usr/share/jenkins/ref/hudson.plugins.sonar.SonarGlobalConfiguration.xml
 
 # ----------- Configure and launch Jenkins --------------------
+
 USER root
 WORKDIR ${SCRATCH}
 COPY configure-and-launch-jenkins ${SCRATCH}/

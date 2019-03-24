@@ -124,8 +124,8 @@ Once launched, you will find the following access points available from your loc
 | ------------- | ----------------------- | ----------------- |
 | Jenkins       | http://localhost:18080/ | no login required |
 | SonarQube     | http://localhost:19000/ | admin/admin       |
-| Nexus         | http://localhost:18081/ | admin/admin123    |
-| Nexus (HTTPS*)        | https://localhost:18443/ | admin/admin123    |
+| Nexus         | http://localhost:8400/ | admin/admin123    |
+| Nexus (HTTPS*)        | https://localhost:8401/ | admin/admin123    |
 
 *\* Uses a self-signed certificate, which you will have to trust in your browser if you want to avoid the annoying "insecure certificate" messages*
 
@@ -133,7 +133,16 @@ Once launched, you will find the following access points available from your loc
 
 Nexus is automatically configured with a Docker repository, which is used to host the Docker images built in Jenkins pipelines.
 
-As required by the Docker CLI, this repository listens on SSL. The connector listens on port 8501 (which is mapped to 18501 on the Docker host).
+As required by the Docker CLI, this repository listens on SSL. The connector listens on port 8501 (which is mapped to 8501 on the Docker host).  It is also part of a Docker group, which wraps the public Docker Hub repository, allowing you to point at a singl, local repository for both opull and push operations.
+
+Access points are as follows:
+
+| *Mode* | *Protocol* | *Environment* | *Endpoint* |
+| ---- | -------- | ----------- | -------- |
+| Pull | HTTPS | In-Container | nexus:8500 |
+| Push | HTTPS | In-Container | nexus:8501 |
+| Pull | HTTPS | Docker Host | localhost:8500 |
+| Push | HTTPS | Docker Host | localhost:8501 |
 
 This SSL connection is secured with a self-signed certificate, which will cause an error when using the Docker CLI.
 
@@ -143,13 +152,21 @@ My recommendation is to simply declare the repository as insecure in Docker's da
 
 ![Mac Insecure Docker Repository](images/docker-insecure.png)
 
+*\* To make it a little easier when you're developing simultaneously in- and outside the container environment, I set up ```nexus``` as an alias to ```localhost``` in my ```/etc/hosts``` file:
+
+```
+127.0.0.1	localhost	nexus
+```
+
+That way, you can refer to the repository as ```nexus``` consistently, whether you're inside a container or at your own command-line.
+
 ## Integrating with your local repository
 
 The purpose of this project is to give the developer a *local* CI/CD pipeline to allow for more immediate feedback as commits are made locally, prior to pushing to origin.
 
 This CI/CD pipeline is also not visible outside the local development environment.
  
-Therefore, since no push to origin means no WebHook trigger, and since a WebHook couldn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
+Therefore, since the absence of a push to origin means no WebHook trigger is fired, and since a WebHook from the internet couldn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
 
 ### Declare and configure a Jenkins build for your project
 
