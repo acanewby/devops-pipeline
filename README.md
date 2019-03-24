@@ -24,9 +24,7 @@ The project provides the following components, all of which are essential for a 
 
 * CI/CD Server - [Jenkins](https://jenkins.io/)
 * Static Code Analysis - [SonarQube](https://www.sonarqube.org/)
-* Automated Testing - [Jasmine](https://jasmine.github.io/), [Protractor](https://www.protractortest.org), JUnit??, NUnit??
 * Artifact Repository - [Nexus](https://www.sonatype.com/nexus-repository-oss)
-* Orchestrated Container Environment - [Kubernetes](https://kubernetes.io/)
 
 For efficiency, all components are delivered as Docker containers.
 
@@ -120,20 +118,31 @@ $
 
 Once launched, you will find the following access points available from your local browser:
 
-| *Tool*        | *Link*                  | *Credentials*     |
-| ------------- | ----------------------- | ----------------- |
-| Jenkins       | http://localhost:18080/ | no login required |
-| SonarQube     | http://localhost:19000/ | admin/admin       |
-| Nexus         | http://localhost:8400/ | admin/admin123    |
-| Nexus (HTTPS*)        | https://localhost:8401/ | admin/admin123    |
+| *Tool*          | *Link*                  | *Credentials*     |
+| --------------- | ----------------------- | ----------------- |
+| Jenkins         | http://localhost:18080/ | no login required |
+| SonarQube       | http://localhost:19000/ | admin/admin       |
+| Nexus           | http://localhost:8400/  | admin/admin123    |
+| Nexus (HTTPS*)  | https://localhost:8401/ | admin/admin123    |
 
 *\* Uses a self-signed certificate, which you will have to trust in your browser if you want to avoid the annoying "insecure certificate" messages*
 
+#### Nexus repositories
+
+To make modern, mixed-environment development a little easier, several additional repositories are configured on top of the standard set that comes with Nexus:
+
+| *Name*          | *Role*                                                            |
+| --------------- | ----------------------------------------------------------------- |
+| docker-internal | Private hosted repository used to store local Docker image builds |
+| docker-hub      | Proxy for official Docker Hub repository |
+| docker-all      | Group repository that wraps docker-internal and docker-hub repositories |
+| npm-internal    | Private hosted repository used to store locally-built npm packages |
+| npmjs-org       | Proxy for official NPM repository |
+| npm-all         | Group repository that wraps npm-internal and npmjs-org repositories |
+
 ### Telling Docker to trust the local Nexus Docker repository
 
-Nexus is automatically configured with a Docker repository, which is used to host the Docker images built in Jenkins pipelines.
-
-As required by the Docker CLI, this repository listens on SSL. The connector listens on port 8501 (which is mapped to 8501 on the Docker host).  It is also part of a Docker group, which wraps the public Docker Hub repository, allowing you to point at a singl, local repository for both opull and push operations.
+As required by the Docker CLI, the local repository listens on SSL. The connector listens on port 8501 (which is mapped to 8501 on the Docker host).  It is also part of a Docker group, which wraps the public Docker Hub repository, allowing you to point at a single, local repository for both pull and push operations.
 
 Access points are as follows:
 
@@ -166,7 +175,7 @@ The purpose of this project is to give the developer a *local* CI/CD pipeline to
 
 This CI/CD pipeline is also not visible outside the local development environment.
  
-Therefore, since the absence of a push to origin means no WebHook trigger is fired, and since a WebHook from the internet couldn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
+Therefore, since the absence of a push to origin means no WebHook trigger fired from GitHub, and since such a WebHook from the internet couldn't reach the local CI/CD pipeline environment anyway, we need to hook to the local clone of the repository on the local filesystem.  
 
 ### Declare and configure a Jenkins build for your project
 
