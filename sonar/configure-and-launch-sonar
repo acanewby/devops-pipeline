@@ -21,18 +21,23 @@ nohup ${SONARQUBE_HOME}/bin/run.sh &
 SONAR_UP=200
 SONAR_STATE=999
 SONAR_DELAY=5
-# Yes, We are deliberately waiting at least SONAR_DELAY seconds to give the server time to get its act together
+
+# Yes, we are deliberately waiting at least SONAR_DELAY seconds to give the server time to get its act together
 echo "======================================" >> $STARTUP_LOG
-echo "Waiting for SonarQube to come up ..."       >> $STARTUP_LOG
+echo "Waiting for SonarQube API to come up ..."       >> $STARTUP_LOG
 echo "--------------------------------------" >> $STARTUP_LOG
 while [ "$SONAR_STATE" -ne "$SONAR_UP" ]; do
-    echo "SonarQube is not up yet ... :(" >> $STARTUP_LOG
+    echo "SonarQube API is not up yet ... :(" >> $STARTUP_LOG
     sleep $SONAR_DELAY
-    SONAR_STATE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$SONAR_PORT)
+    SONAR_STATE=$(curl -s -o /dev/null -w "%{http_code}" "http://sonar:$SONAR_PORT/api/server/version")
 done
 echo "--------------------------------------" >> $STARTUP_LOG
-echo "SonarQube is up ... :)"                     >> $STARTUP_LOG
+echo "SonarQube API is up ... :)"                     >> $STARTUP_LOG
 echo "======================================" >> $STARTUP_LOG
+sleep $SONAR_DELAY
 
 # Set up a WebHook for Jenkins
-curl "http://$SONAR_USR:$SONAR_PW@sonar:$SONAR_PORT/api/webhooks/create" -X POST -d "name=jenkins&url=http://jenkins:8080/sonarqube-webhook/"
+curl "http://$SONAR_USR:$SONAR_PW@sonar:$SONAR_PORT/api/webhooks/create" -X POST -d "name=jenkins&url=http://jenkins:8080/sonarqube-webhook/" >> $STARTUP_LOG
+
+# Since we nohup'd the main SonarQube process, we need to keep the container alive using this script
+tail -f /dev/null
