@@ -15,9 +15,11 @@ RUN touch $STARTUP_LOG && chmod a+rw $STARTUP_LOG
 
 # Configure and launch sonarqube
 USER sonarqube
+
 ENV SONAR_USR admin
 ENV SONAR_PW admin
 ENV SONAR_PORT 9000
 
-ARG TRIGGER=2
-ENTRYPOINT ${SCRATCH}/configure-and-launch-sonar
+ARG TRIGGER=5
+WORKDIR $SCRATCH
+ENTRYPOINT ["./configure-and-launch-sonar"]
