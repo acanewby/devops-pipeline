@@ -28,6 +28,8 @@ The project provides the following components, all of which are essential for a 
 
 For efficiency, all components are delivered as Docker containers.
 
+A nice feature of the configuration is the automatic creation of a WebHook inside SonarQube that notifies Jenkins of the result of any code analysis job.  This WebHook allows the configuration of [SonarQubeQuality gates](https://jenkins.io/doc/pipeline/steps/sonar/#waitforqualitygate-wait-for-sonarqube-analysis-to-be-completed-and-return-quality-gate-status) within a Jenkins pipeline. 
+
 ## Prerequisites
 
 To get started, you need a couple of things:

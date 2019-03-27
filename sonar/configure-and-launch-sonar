@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# The following env vars should be defined by the source image
+echo "===================================================="
+echo "Sonar environment"
+echo "===================================================="
+echo "SONARQUBE_HOME      : ${SONARQUBE_HOME}"
+echo "SONAR_VERSION       : ${SONAR_VERSION}"
+echo "SONAR_PORT          : ${SONAR_PORT}"
+echo "----------------------------------------------------"
+echo "PATH                : ${PATH}"
+echo "===================================================="
+
+# Zero out log file
+cat /dev/null > $STARTUP_LOG
+
+# What's the env?
+env >> $STARTUP_LOG
+
+echo "Launching SonarQube ..." >> $STARTUP_LOG
+pushd ${SONARQUBE_HOME}
+nohup ./bin/run.sh &
+popd
+
+# Wait for SonarQube to come up ...
+SONAR_UP=200
+SONAR_STATE=999
+LOOP_DELAY=5
+
+# Yes, we are deliberately waiting at least SONAR_DELAY seconds to give the server time to get its act together
+echo "======================================" >> $STARTUP_LOG
+echo "Waiting for SonarQube API to come up ..."       >> $STARTUP_LOG
+echo "--------------------------------------" >> $STARTUP_LOG
+while [ "$SONAR_STATE" -ne "$SONAR_UP" ]; do
+    echo "SonarQube API is not up yet ... :(" >> $STARTUP_LOG
+    sleep $LOOP_DELAY
+    SONAR_STATE=$(curl -s -o /dev/null -w "%{http_code}" "http://sonar:$SONAR_PORT/api/server/version")
+done
+echo "--------------------------------------" >> $STARTUP_LOG
+echo "SonarQube API is up ... :)"                     >> $STARTUP_LOG
+echo "======================================" >> $STARTUP_LOG
+
+
+# Set up a WebHook for Jenkins
+WEBHOOK_CODE=999
+WEBHOOK_CREATED=200
+echo "======================================" >> $STARTUP_LOG
+echo "Creating Jenkins WebHook ..." >> $STARTUP_LOG
+echo "--------------------------------------" >> $STARTUP_LOG
+while [ "$WEBHOOK_CODE" -ne "$WEBHOOK_CREATED" ]; do
+    echo "Trying to create Jenkins WebHook ..." >> $STARTUP_LOG
+    WEBHOOK_CODE=$(curl -s -o /dev/null -w "%{http_code}" "http://$SONAR_USR:$SONAR_PW@sonar:$SONAR_PORT/api/webhooks/create" -X POST -d "name=jenkins&url=http://jenkins:8080/sonarqube-webhook/")
+    sleep $LOOP_DELAY
+done
+echo "--------------------------------------" >> $STARTUP_LOG
+echo "Created WebHook ..." >> $STARTUP_LOG
+curl "http://$SONAR_USR:$SONAR_PW@sonar:$SONAR_PORT/api/webhooks/list" >> $STARTUP_LOG
+echo "======================================" >> $STARTUP_LOG
+
+
+
+# Since we nohup'd the main SonarQube process, we need to keep the container alive using this script
+tail -f /dev/null

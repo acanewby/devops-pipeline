@@ -48,6 +48,13 @@ RUN adduser jenkins docker
 USER jenkins
 
 # Install plugins
+
+# Run this script at http://localhost:18080/script
+#
+# Jenkins.instance.pluginManager.plugins.each{
+#  plugin ->
+#    println ("${plugin.getShortName()}:${plugin.getVersion()}")
+#}
 COPY plugins.txt /usr/share/jenkins/plugins.txt
 RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/plugins.txt
 
