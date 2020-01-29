@@ -5,12 +5,30 @@ networks:
     external: true
 
 volumes:
+  jenkins-data:
   postgres-data:
   nexus-data:
   shared-data:
   maven-repo:
 
 services:
+  jenkins:
+    build: ./jenkins
+    restart: always
+    ports:
+      - "18080:8080"
+    networks:
+      - devopsnetwork
+    volumes:
+      - ${MY_REPOS}:/repos
+      - /var/run/docker.sock:/var/run/docker.sock
+      - jenkins-data:/var/jenkins_home
+      - maven-repo:/root/.m2
+    depends_on:
+      - sonar
+    environment:
+      - SONAR_PORT=9000
+      - SONAR_DB_PORT=5432
   sonardb:
     build: ./sonardb
     networks:

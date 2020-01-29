@@ -1,0 +1,5 @@
+{
+  "name": "dl8-pypi-repo-group",
+  "type": "groovy",
+  "content": "repository.getRepositoryManager().delete('pypi-internal');repository.getRepositoryManager().delete('pypi-org');repository.getRepositoryManager().delete('pypi-all');"
+}

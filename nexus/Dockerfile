@@ -1,5 +1,4 @@
-FROM sonatype/nexus3:3.15.2
-
+FROM sonatype/nexus3:3.20.1
 # Install required packages
 USER root
 RUN yum install -y openssl curl ca-certificates sudo && \
@@ -10,22 +9,7 @@ RUN echo "nexus ALL=NOPASSWD: ALL" >> /etc/sudoers
 
 # General environment setup
 ENV SCRATCH=/scratch
-ARG JDK_VER=8
-ARG JDK_ARCHIVE=${SCRATCH}/jdk-${JDK_VER}.tar.gz
-
-WORKDIR /opt/java/jdk
-
-# Install OpenJDK
-RUN mkdir -p ${SCRATCH} && \
-    curl --location --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz -o ${JDK_ARCHIVE} && \
-    tar -xvzf ${JDK_ARCHIVE} && \
-    ln -s ./jdk1.8.0_202/ $JDK_VER && \
-    rm -f ${JDK_ARCHIVE}
-
-ENV JAVA_HOME /opt/java/jdk/$JDK_VER
-ENV PATH ${JAVA_HOME}/bin:$PATH
-
-ARG TRIGGER=10
+RUN mkdir -p ${SCRATCH}
 
 # Install some utilities
 ENV NEXUS_UTIL /opt/nexus-util
@@ -35,6 +19,7 @@ COPY util/nexus-script-* ${NEXUS_UTIL}/
 RUN chmod a+x ${NEXUS_UTIL}/nexus-script-*
 
 # Stage Nexus config items
+
 COPY configure-and-launch-nexus ${SCRATCH}
 COPY nexus.properties ${SCRATCH}
 COPY *.json ${SCRATCH}/
@@ -52,7 +37,7 @@ ENV NEXUS_USR admin
 ENV NEXUS_PW admin123
 ENV NEXUS_PORT 8400
 
-ARG TRIGGER=1
+# Does what it says on the tin ...
 ENTRYPOINT ${SCRATCH}/configure-and-launch-nexus
 
 
