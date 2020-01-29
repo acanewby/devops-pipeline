@@ -73,18 +73,33 @@ curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v
 curl -u $NEXUS_USR:$NEXUS_PW -X GET "http://localhost:$NEXUS_PORT/service/rest/v1/script" >> $STARTUP_LOG
 echo "--------------------------------------" >> $STARTUP_LOG
 
-# Create some repos
+# Upload repo maintenance scripts
 for SCRIPT in dl8-terraform-repo cr8-terraform-repo \
     dl8-npm-repo-group cr8-npm-repo-group \
+    dl8-pypi-repo-group cr8-pypi-repo-group \
     dl8-docker-repo-group cr8-docker-repo-group
 do
     # If the script is not already present, put it there
     nexus-script-create -u $NEXUS_USR -p $NEXUS_PW -f ./$SCRIPT.json >> $STARTUP_LOG
     # If the script already exists, update it in case we have a new version
     nexus-script-update -u $NEXUS_USR -p $NEXUS_PW -s $SCRIPT -f ./$SCRIPT.json >> $STARTUP_LOG
-    # Run the script
-    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s $SCRIPT >> $STARTUP_LOG
 done
+
+#  Create repos where they don't already exist
+if [ "`curl -s "http://localhost:8400/service/rest/v1/repositories" | grep terraform | wc -l`" -eq 0 ]; then
+    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-terraform-repo >> $STARTUP_LOG
+fi
+if [ "`curl -s "http://localhost:8400/service/rest/v1/repositories" | grep npm | wc -l`" -eq 0 ]; then
+    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-npm-repo-group >> $STARTUP_LOG
+fi
+if [ "`curl -s "http://localhost:8400/service/rest/v1/repositories" | grep pypi | wc -l`" -eq 0 ]; then
+    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-pypi-repo-group >> $STARTUP_LOG
+fi
+if [ "`curl -s "http://localhost:8400/service/rest/v1/repositories" | grep docker | wc -l`" -eq 0 ]; then
+    nexus-script-run -u $NEXUS_USR -p $NEXUS_PW -s cr8-docker-repo-group >> $STARTUP_LOG
+fi
+
+
 
 # List the repositories after
 echo "--------------------------------------" >> $STARTUP_LOG

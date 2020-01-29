@@ -1,0 +1,5 @@
+{
+  "name": "cr8-pypi-repo-group",
+  "type": "groovy",
+  "content": "repository.createPyPiHosted('pypi-internal'); repository.createPyPiProxy('pypi-org','https://pypi.org/'); repository.createPyPiGroup('pypi-all',['pypi-internal','pypi-org'])"
+}
