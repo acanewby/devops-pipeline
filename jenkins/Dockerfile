@@ -4,9 +4,6 @@ FROM jenkinsci/blueocean:1.9.0
 
 USER root
 
-# Add Docker repo
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/latest-stable/community" >> /etc/apk/repositories
-
 # Update repos and add some important packages
 RUN apk update && apk add sudo curl
 

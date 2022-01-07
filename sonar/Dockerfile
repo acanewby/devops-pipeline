@@ -1,6 +1,9 @@
-FROM sonarqube:7.9-community
+FROM sonarqube:9.2-community
 
 USER root
+
+# Update repos and add some important packages
+RUN apk update && apk add sudo curl
 
 ENV SCRATCH=/scratch
 RUN mkdir -p $SCRATCH
