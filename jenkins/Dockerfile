@@ -1,4 +1,4 @@
-FROM jenkinsci/blueocean:1.9.0
+FROM jenkinsci/blueocean:1.24.7
 
 # ------- as root --------------
 
@@ -35,6 +35,7 @@ RUN rm -f ${SCRATCH}/zulu-jdk-8.tar.gz
 ENV JAVA_HOME /opt/java/jdk/8
 ENV PATH ${JAVA_HOME}/bin:$PATH
 
+
 # ------- set jenkins user privs --------
 
 RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
@@ -52,8 +53,8 @@ USER jenkins
 #  plugin ->
 #    println ("${plugin.getShortName()}:${plugin.getVersion()}")
 #}
-COPY plugins.txt /usr/share/jenkins/plugins.txt
-RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/plugins.txt
+COPY plugins.txt /tmp/plugins.txt
+RUN /usr/local/bin/install-plugins.sh < /tmp/plugins.txt
 
 # Set basic configuration (mainly, disable security)
 COPY config.xml /usr/share/jenkins/ref/config.xml
@@ -64,6 +65,7 @@ COPY org.sonatype.nexus.ci.config.GlobalNexusConfiguration.xml /usr/share/jenkin
 
 # Configure SonarQube
 COPY hudson.plugins.sonar.SonarGlobalConfiguration.xml /usr/share/jenkins/ref/hudson.plugins.sonar.SonarGlobalConfiguration.xml
+
 
 # ----------- Configure and launch Jenkins --------------------
 
